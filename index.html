@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Payment Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .kpi-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -31px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #118AB2;
+            border: 4px solid #F8F9FA;
+            transition: background-color 0.3s;
+        }
+        .timeline-item.paid::before {
+            background-color: #06D6A0;
+        }
+        .admin-controls {
+            display: none;
+        }
+        body.admin-mode .admin-controls {
+            display: block;
+        }
+        .paid .payment-details-text {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body class="text-[#073B4C]">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-12">
+            <div class="flex justify-center items-center gap-4 mb-4">
+                 <button id="adminBtn" class="bg-[#073B4C] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#118AB2] transition-colors">
+                    Enter Admin Mode
+                </button>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-[#073B4C] mb-2">Rent Dashboard</h1>
+            <p class="text-lg text-[#118AB2]">For Sheetal Khadka & Axeta Nirola</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold text-gray-500 mb-2">Fortnightly Rent</h3>
+                <p class="text-5xl font-extrabold text-[#06D6A0]">$520</p>
+            </div>
+            <div id="next-due-kpi" class="kpi-card">
+                <h3 class="text-lg font-semibold text-gray-500 mb-2">Next Payment Due</h3>
+                <p class="text-4xl font-bold text-[#FF6B6B]">Aug 10, 2025</p>
+            </div>
+            <div id="total-paid-kpi" class="kpi-card">
+                <h3 class="text-lg font-semibold text-gray-500 mb-2">Total Paid</h3>
+                <p class="text-5xl font-extrabold text-[#118AB2]">$0</p>
+            </div>
+            <div class="kpi-card">
+                <h3 class="text-lg font-semibold text-gray-500 mb-2">Total Rent in Period</h3>
+                <p class="text-5xl font-extrabold text-gray-700">$7,280</p>
+            </div>
+        </main>
+        
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">Monthly Rent Breakdown</h2>
+                <p class="text-gray-600 mb-6">This chart shows paid vs. due rent each month for the upcoming period. Note how November has three payment cycles.</p>
+                <div class="chart-container h-[350px] md:h-96 max-h-[450px]">
+                    <canvas id="monthlyRentChart"></canvas>
+                </div>
+            </div>
+
+            <div class="space-y-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">🔔 Notifications</h2>
+                        <div class="admin-controls">
+                            <button id="add-notification-btn" class="bg-blue-500 text-white text-sm font-semibold py-1 px-3 rounded-lg hover:bg-blue-600">+ Add Notification</button>
+                        </div>
+                    </div>
+                    <div id="notification-list" class="space-y-4 max-h-48 overflow-y-auto pr-2">
+                        
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+                    <h2 class="text-2xl font-bold mb-6">Shared Utility Bills</h2>
+                    <p class="text-gray-600 mb-6">Utility costs for electricity, water, and internet are shared equally. All bills are stored in a shared folder, which you can access by clicking the button below.</p>
+                    <div class="mt-auto">
+                        <a href="https://drive.google.com/drive/folders/1ZoBCqcSDX-zJlcwzJYdnqlKzr13EvTfb?usp=sharing" target="_blank" rel="noopener noreferrer" class="block w-full bg-yellow-400 text-yellow-900 font-bold py-3 px-4 rounded-lg text-center hover:bg-yellow-500 transition-colors">
+                            Open Utility Bills Folder
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold text-center mb-8">Fortnightly Payment Timeline</h2>
+            <div id="payment-timeline" class="relative pl-8 border-l-2 border-dashed border-[#118AB2]">
+            </div>
+        </section>
+        
+        <footer class="text-center mt-12">
+            <p class="text-xs text-gray-500">
+                This dashboard is an informal overview to help keep up with dates and payments. It does not act as a tax document and is not for government purposes.
+            </p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const initialPayments = [
+                { id: 0, month: 'July 2025', dueDate: 'Jul 27, 2025', amount: 520, status: 'paid' },
+                { id: 1, month: 'August 2025', dueDate: 'Aug 10, 2025', amount: 520, status: 'due' },
+                { id: 2, month: 'August 2025', dueDate: 'Aug 24, 2025', amount: 520, status: 'due' },
+                { id: 3, month: 'September 2025', dueDate: 'Sep 7, 2025', amount: 520, status: 'due' },
+                { id: 4, month: 'September 2025', dueDate: 'Sep 21, 2025', amount: 520, status: 'due' },
+                { id: 5, month: 'October 2025', dueDate: 'Oct 5, 2025', amount: 520, status: 'due' },
+                { id: 6, month: 'October 2025', dueDate: 'Oct 19, 2025', amount: 520, status: 'due' },
+                { id: 7, month: 'November 2025', dueDate: 'Nov 2, 2025', amount: 520, status: 'due' },
+                { id: 8, month: 'November 2025', dueDate: 'Nov 16, 2025', amount: 520, status: 'due' },
+                { id: 9, month: 'November 2025', dueDate: 'Nov 30, 2025', amount: 520, status: 'due' },
+                { id: 10, month: 'December 2025', dueDate: 'Dec 14, 2025', amount: 520, status: 'due' },
+                { id: 11, month: 'December 2025', dueDate: 'Dec 28, 2025', amount: 520, status: 'due' },
+                { id: 12, month: 'January 2026', dueDate: 'Jan 11, 2026', amount: 520, status: 'due' },
+                { id: 13, month: 'January 2026', dueDate: 'Jan 25, 2026', amount: 520, status: 'due' },
+            ];
+
+            let payments = [];
+            let notifications = [];
+            let monthlyRentChart;
+
+            const adminBtn = document.getElementById('adminBtn');
+            const timelineContainer = document.getElementById('payment-timeline');
+            const notificationList = document.getElementById('notification-list');
+            const addNotificationBtn = document.getElementById('add-notification-btn');
+            const correctPassword = '@Nimace46';
+
+            function saveData() {
+                localStorage.setItem('rentPaymentsData', JSON.stringify(payments));
+                localStorage.setItem('rentNotificationsData', JSON.stringify(notifications));
+            }
+
+            function loadData() {
+                const savedPayments = localStorage.getItem('rentPaymentsData');
+                payments = savedPayments ? JSON.parse(savedPayments) : JSON.parse(JSON.stringify(initialPayments));
+                
+                const savedNotifications = localStorage.getItem('rentNotificationsData');
+                notifications = savedNotifications ? JSON.parse(savedNotifications) : [];
+            }
+            
+            function markAsPaid(id) {
+                const payment = payments.find(p => p.id === id);
+                if (payment) {
+                    payment.status = 'paid';
+                    saveData();
+                    render();
+                }
+            }
+            
+            function addNotification() {
+                const text = prompt("Enter notification message:");
+                if (text) {
+                    notifications.unshift({
+                        id: Date.now(),
+                        text: text,
+                        timestamp: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    });
+                    saveData();
+                    render();
+                }
+            }
+
+            function deleteNotification(id) {
+                notifications = notifications.filter(n => n.id !== id);
+                saveData();
+                render();
+            }
+
+            function renderKPIs() {
+                const totalPaid = payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+                document.querySelector('#total-paid-kpi p').textContent = `$${totalPaid.toLocaleString()}`;
+
+                const nextDuePayment = payments.find(p => p.status === 'due');
+                const nextDueEl = document.querySelector('#next-due-kpi p');
+                if (nextDuePayment) {
+                    nextDueEl.textContent = nextDuePayment.dueDate;
+                    nextDueEl.classList.remove('text-green-500');
+                    nextDueEl.classList.add('text-[#FF6B6B]');
+                } else {
+                    nextDueEl.textContent = 'All Paid!';
+                    nextDueEl.classList.remove('text-[#FF6B6B]');
+                    nextDueEl.classList.add('text-green-500');
+                }
+            }
+            
+            function renderTimeline() {
+                timelineContainer.innerHTML = '';
+                const paymentsByMonth = payments.reduce((acc, p) => {
+                    if (!acc[p.month]) {
+                        acc[p.month] = [];
+                    }
+                    acc[p.month].push(p);
+                    return acc;
+                }, {});
+
+                for (const month in paymentsByMonth) {
+                    const monthPayments = paymentsByMonth[month];
+                    const allInMonthPaid = monthPayments.every(p => p.status === 'paid');
+                    
+                    const monthDiv = document.createElement('div');
+                    monthDiv.className = `mb-8 relative timeline-item ${allInMonthPaid ? 'paid' : ''}`;
+                    
+                    let paymentDetailsHtml = monthPayments.map(p => `
+                        <div class="flex justify-between items-center ${p.status === 'paid' ? 'payment-details-text' : ''}">
+                            <span>Due: ${p.dueDate}</span>
+                            <div class="admin-controls">
+                                ${p.status === 'due' ? `<button data-id="${p.id}" class="mark-paid-btn bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">Mark Paid</button>` : '<span class="text-green-600 font-semibold">PAID</span>'}
+                            </div>
+                        </div>
+                    `).join('');
+
+                    monthDiv.innerHTML = `
+                        <h4 class="font-bold text-lg text-[#073B4C]">${month}</h4>
+                        <div class="text-sm text-gray-600 space-y-2 mt-2">${paymentDetailsHtml}</div>
+                    `;
+                    timelineContainer.appendChild(monthDiv);
+                }
+                
+                document.querySelectorAll('.mark-paid-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        markAsPaid(id);
+                    });
+                });
+            }
+
+            function renderNotifications() {
+                notificationList.innerHTML = '';
+                if (notifications.length === 0) {
+                    notificationList.innerHTML = `<p class="text-gray-500 text-center">No new notifications.</p>`;
+                    return;
+                }
+                
+                notifications.forEach(n => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-start p-2 bg-gray-50 rounded-lg';
+                    item.innerHTML = `
+                        <div class="text-xl mr-3 mt-1">💬</div>
+                        <div class="flex-grow">
+                            <p>${n.text}</p>
+                            <p class="text-xs text-gray-400">${n.timestamp}</p>
+                        </div>
+                        <div class="admin-controls">
+                            <button data-id="${n.id}" class="delete-notification-btn text-red-500 hover:text-red-700 font-bold ml-2">&times;</button>
+                        </div>
+                    `;
+                    notificationList.appendChild(item);
+                });
+
+                document.querySelectorAll('.delete-notification-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        deleteNotification(id);
+                    });
+                });
+            }
+
+            function renderChart() {
+                const chartLabels = ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan'];
+                const monthlyData = chartLabels.map(label => {
+                    const monthName = Object.keys(initialPayments.reduce((acc,p) => ({...acc, [p.month.split(' ')[0]]:1}),{})).find(m => m.startsWith(label));
+                    const relevantPayments = payments.filter(p => p.month.includes(monthName));
+                    const paid = relevantPayments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+                    const due = relevantPayments.filter(p => p.status === 'due').reduce((sum, p) => sum + p.amount, 0);
+                    return { paid, due };
+                });
+
+                const paidData = monthlyData.map(m => m.paid);
+                const dueData = monthlyData.map(m => m.due);
+
+                const data = {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Paid',
+                            data: paidData,
+                            backgroundColor: '#06D6A0',
+                        },
+                        {
+                            label: 'Due',
+                            data: dueData,
+                            backgroundColor: '#FF6B6B',
+                        }
+                    ]
+                };
+
+                if (monthlyRentChart) {
+                    monthlyRentChart.data = data;
+                    monthlyRentChart.update();
+                } else {
+                    const ctx = document.getElementById('monthlyRentChart').getContext('2d');
+                    monthlyRentChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { stacked: true },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) { return '$' + value; }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: { position: 'top' },
+                                tooltip: {
+                                    callbacks: {
+                                        title: function(tooltipItems) {
+                                            return tooltipItems[0].label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            function render() {
+                renderKPIs();
+                renderTimeline();
+                renderNotifications();
+                renderChart();
+            }
+
+            adminBtn.addEventListener('click', () => {
+                if (document.body.classList.contains('admin-mode')) {
+                    document.body.classList.remove('admin-mode');
+                    adminBtn.textContent = 'Enter Admin Mode';
+                    adminBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                    adminBtn.classList.add('bg-[#073B4C]', 'hover:bg-[#118AB2]');
+                } else {
+                    const password = prompt('Enter Admin Password:');
+                    if (password === correctPassword) {
+                        document.body.classList.add('admin-mode');
+                        adminBtn.textContent = 'Exit Admin Mode';
+                        adminBtn.classList.remove('bg-[#073B4C]', 'hover:bg-[#118AB2]');
+                        adminBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+                    } else if (password !== null) {
+                        alert('Incorrect Password.');
+                    }
+                }
+            });
+            
+            addNotificationBtn.addEventListener('click', addNotification);
+
+            loadData();
+            render();
+        });
+    </script>
+
+</body>
+</html>

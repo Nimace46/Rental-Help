@@ -1,0 +1,40 @@
+# Node modules (if you ever use Node.js for automation or local dev)
+node_modules/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local env files
+.env
+.env.*
+
+# VSCode settings
+.vscode/
+
+# MacOS and Linux swap files
+*.swp
+
+# npm debug
+npm-debug.log*
+
+# Compiled output
+dist/
+build/
+out/
+
+# OS generated files
+Icon?
+.Spotlight-V100
+.Trashes
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
