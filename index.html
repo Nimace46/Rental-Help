@@ -311,7 +311,7 @@
                 const prompt = `Create a fair 4-week chore rotation for a household with these people: ${people.join(', ')}. The available chores are: ${choreOptions.join(', ')}. Ensure the main chores (Kitchen, Bathroom, Vacuum) are rotated so nobody gets the same one two weeks in a row. The other chores can be assigned as needed. Provide the output as a JSON object with a single key "rotation" which is an array of 4 weeks. Each week should be an object with keys for each person's name, and the value being their assigned chore for that week.`;
 
                 try {
-                    const apiKey = "";
+                    const apiKey = "AIzaSyDQ7pMpHWdrsb25VkqZWiYbguifUwCKZ9Q";
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                     
                     const payload = {
