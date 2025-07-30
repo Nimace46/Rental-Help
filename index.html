@@ -174,11 +174,11 @@
 
     </div>
 
-    <!-- Gemini Suggestion Modal -->
+    <!-- Suggestion Modal -->
     <div id="suggestionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-        <div class="relative mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="relative mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
             <div class="mt-3 text-center">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">✨ AI-Powered Chore Rotation</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">🎲 Random Chore Suggestion</h3>
                 <div id="suggestion-content" class="mt-2 px-7 py-3 max-h-96 overflow-y-auto">
                     <p>Generating suggestions...</p>
                 </div>
@@ -302,76 +302,43 @@
                 }
             }
 
-            async function suggestChoreRotation() {
+            function suggestChoreRotation() {
                 suggestionModal.classList.remove('hidden');
-                suggestionContent.innerHTML = `<p>✨ Generating a fair 4-week rotation...</p>`;
-                applySuggestionBtn.classList.add('hidden');
+                suggestionContent.innerHTML = `<p>🎲 Generating a random weekly assignment...</p>`;
+                applySuggestionBtn.classList.remove('hidden');
+
+                // Simple shuffle algorithm
+                const shuffledChores = [...choreOptions].sort(() => 0.5 - Math.random());
                 
-                const people = chores.map(c => c.name);
-                const prompt = `Create a fair 4-week chore rotation for a household with these people: ${people.join(', ')}. The available chores are: ${choreOptions.join(', ')}. Ensure the main chores (Kitchen, Bathroom, Vacuum) are rotated so nobody gets the same one two weeks in a row. The other chores can be assigned as needed. Provide the output as a JSON object with a single key "rotation" which is an array of 4 weeks. Each week should be an object with keys for each person's name, and the value being their assigned chore for that week.`;
+                const newSuggestion = {};
+                chores.forEach((person, index) => {
+                    newSuggestion[person.name] = shuffledChores[index];
+                });
+                
+                choreSuggestion = newSuggestion;
 
-                try {
-                    const apiKey = "AIzaSyDQ7pMpHWdrsb25VkqZWiYbguifUwCKZ9Q";
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-                    
-                    const payload = {
-                        contents: [{ role: "user", parts: [{ text: prompt }] }],
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                        }
-                    };
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`API request failed with status ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    const text = result.candidates[0].content.parts[0].text;
-                    const parsedJson = JSON.parse(text);
-                    choreSuggestion = parsedJson.rotation;
-
-                    let suggestionHtml = '';
-                    choreSuggestion.forEach((week, index) => {
-                        suggestionHtml += `<h4 class="text-md font-semibold mt-4 mb-2 text-left">Week ${index + 1}</h4>`;
-                        suggestionHtml += '<ul class="list-disc list-inside text-left">';
-                        for (const person in week) {
-                            suggestionHtml += `<li><strong>${person}:</strong> ${week[person]}</li>`;
-                        }
-                        suggestionHtml += '</ul>';
-                    });
-                    
-                    suggestionContent.innerHTML = suggestionHtml;
-                    applySuggestionBtn.classList.remove('hidden');
-
-                } catch (error) {
-                    suggestionContent.innerHTML = `<p class="text-red-500">Sorry, I couldn't generate suggestions at this time. Error: ${error.message}</p>`;
-                    console.error("Error fetching chore suggestions:", error);
+                let suggestionHtml = `<h4 class="text-md font-semibold mt-4 mb-2 text-left">Suggested Week:</h4>`;
+                suggestionHtml += '<ul class="list-disc list-inside text-left">';
+                for (const person in choreSuggestion) {
+                    suggestionHtml += `<li><strong>${person}:</strong> ${choreSuggestion[person]}</li>`;
                 }
+                suggestionHtml += '</ul>';
+                
+                suggestionContent.innerHTML = suggestionHtml;
             }
 
             function applySuggestion() {
-                if (choreSuggestion && choreSuggestion.length > 0) {
-                    const week1 = choreSuggestion[0];
-                    const newChores = [];
+                if (choreSuggestion) {
                     let currentDate = new Date();
                     currentDate.setDate(currentDate.getDate() + 7); // Set due date to next week
                     const dueDateStr = currentDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-                    chores.forEach(person => {
-                        if (week1[person.name]) {
-                             newChores.push({
-                                name: person.name,
-                                task: week1[person.name],
-                                dueDate: dueDateStr
-                            });
-                        }
-                    });
+                    const newChores = chores.map(person => ({
+                        name: person.name,
+                        task: choreSuggestion[person.name] || 'Not assigned',
+                        dueDate: dueDateStr
+                    }));
+
                     chores = newChores;
                     saveData();
                     render();
@@ -517,7 +484,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-2xl font-bold">🧹 Weekly Chores</h2>
                         <div class="admin-controls">
-                            <button id="suggest-chores-btn" class="bg-purple-500 text-white text-sm font-semibold py-1 px-3 rounded-lg hover:bg-purple-600">✨ Suggest Rotation</button>
+                            <button id="suggest-chores-btn" class="bg-purple-500 text-white text-sm font-semibold py-1 px-3 rounded-lg hover:bg-purple-600">🎲 Suggest Rotation</button>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-gray-700">${choreGrid}</div>
